@@ -1,0 +1,338 @@
+/* Styles for unless Accessibility Analyzer */
+
+/* Main overlay frame styling */
+#accessibility-analyzer-overlay {
+    opacity: 0.98;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    border-radius: 16px !important;
+    visibility: visible !important;
+    display: block !important;
+  }
+  
+  /* Drag cover for when moving the overlay */
+  #accessibility-overlay-drag-cover {
+    cursor: grabbing;
+    background-color: transparent;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2147483646;
+  }
+  
+  /* Overlay button that can be added to show the overlay */
+  .accessibility-analyzer-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background-color: #6246EA;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    cursor: pointer;
+    z-index: 9999;
+    border: none;
+  }
+  
+  .accessibility-analyzer-button:hover {
+    background-color: #5234d8;
+  }
+  
+  /* Notifications */
+  .accessibility-notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    font-size: 14px;
+    max-width: 80%;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .accessibility-notification.fadeout {
+    animation: fadeOut 0.3s ease forwards;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+  
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translate(-50%, 0); }
+    to { opacity: 0; transform: translate(-50%, 20px); }
+  }
+  
+  /* Additional styles for the sidebar when in dark mode */
+  .dark-mode .accessibility-analyzer-overlay {
+    background-color: #111111 !important;
+  }
+  
+  /* Fix for minimized mode */
+  .sidebar-container.collapsed {
+    width: 70px !important;
+    height: 350px !important;
+    border-radius: 40px !important;
+    overflow: hidden !important;
+  }
+  
+  /* Vertical logo styling */
+  .vertical-logo {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    text-align: center;
+    height: 100%;
+    position: relative;
+  }
+  
+  .sidebar-container.collapsed .vertical-logo {
+    display: flex !important;
+  }
+  
+  .vertical-logo .un {
+    color: #777777 !important;
+    opacity: 0.5 !important;
+    font-size: 1.8rem !important;
+    font-weight: 600;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    margin-bottom: 5px;
+  }
+  
+  .vertical-logo .less {
+    color: var(--text-color) !important;
+    font-size: 1.8rem !important;
+    font-weight: 600;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+  }
+  
+  .vertical-logo .comma {
+    display: none;
+  }
+  
+  /* Expansion button styling */
+  .expand-button {
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    background-color: #6246EA !important;
+    color: white !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    border: none !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+    z-index: 1001 !important;
+  }
+  
+  /* Ensure chat window fits properly */
+  .chat-panel {
+    position: fixed !important;
+    bottom: 80px !important;
+    right: 20px !important;
+    width: 280px !important;
+    height: 450px !important;
+    max-height: 70vh !important;
+    background-color: var(--bg-color) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    z-index: 1100 !important;
+    border: 1px solid var(--border-color) !important;
+    overflow: hidden !important;
+  }
+  
+  .chat-messages {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 15px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    max-height: calc(100% - 120px) !important;
+  }
+  
+  /* Fix dark mode text colors */
+  body.dark-mode .score-number,
+  body.dark-mode .score-percent,
+  body.dark-mode #score-description,
+  body.dark-mode .feature-name,
+  body.dark-mode .nav-item,
+  body.dark-mode .feature-description,
+  body.dark-mode .chat-input {
+    color: white !important;
+  }
+  
+  body.dark-mode .nav-item.active {
+    color: white !important;
+    background-color: #6246EA !important;
+  }
+  
+  /* Ensure the logo displays correctly */
+  .sidebar-header .logo .un {
+    opacity: 0.5 !important;
+  }
+  
+  /* Settings panel styling */
+  .settings-panel {
+    display: none;
+    position: absolute !important;
+    top: 60px !important;
+    right: 15px !important;
+    width: 250px !important;
+    background-color: var(--bg-color) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    z-index: 10 !important;
+    border: 1px solid var(--border-color) !important;
+  }
+  
+  /* Ensure main UI is visible */
+  #main-ui {
+    display: flex !important;
+  }
+  
+  /* Make sure content elements are properly displayed */
+  .sidebar-content, 
+  .sidebar-nav, 
+  .accessibility-score-container, 
+  .sidebar-footer {
+    display: flex !important;
+  }
+  
+  /* Fix sidebar tab content scrolling */
+  .sidebar-content {
+    overflow-y: auto !important;
+    max-height: calc(100vh - 250px) !important;
+  }
+  
+  /* Fix loading spinner visibility */
+  .spinner {
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top: 3px solid #6246EA;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+    display: inline-block !important;
+  }
+  
+  /* Dark mode spinner */
+  body.dark-mode .spinner {
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid #6246EA;
+  }
+  
+  /* Make sure text and headings are properly visible in dark mode */
+  body.dark-mode {
+    color: white !important;
+  }
+  
+  body.dark-mode .category-title,
+  body.dark-mode .feature-item,
+  body.dark-mode .community-title,
+  body.dark-mode .community-data blockquote,
+  body.dark-mode .community-data cite,
+  body.dark-mode .stat-label,
+  body.dark-mode .loading-text {
+    color: white !important;
+  }
+  
+  /* Ensure feature items stand out in dark mode */
+  body.dark-mode .feature-item {
+    background-color: #222222 !important;
+  }
+  
+  /* Fix community data section in dark mode */
+  body.dark-mode .community-data {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+  
+  /* Ensure feature buttons are visible in dark mode */
+  body.dark-mode .solutions-button, 
+  body.dark-mode .settings-button {
+    background-color: #6246EA !important;
+    color: white !important;
+  }
+  
+  /* Make sure email notification displays correctly */
+  #email-notification {
+    z-index: 9999;
+    display: none;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+  }
+  
+  .email-address {
+    user-select: all;
+  }
+  
+  /* Fix onboarding toggles */
+  .category-toggle {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  .toggle-slider {
+    display: block;
+  }
+  
+  /* Ensure onboarding spacing */
+  .feature-category {
+    margin-bottom: 20px;
+  }
+  
+  .features-list {
+    padding: 10px 15px !important;
+  }
+  
+  .analytics-toggle {
+    margin-top: 30px !important;
+    margin-bottom: 20px !important;
+  }
+  
+  /* Fix for dragging overlay */
+  .sidebar-header-drag {
+    cursor: grab;
+  }
+  
+  /* Better visibility for chat button */
+  .chat-icon-button {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  /* Dark mode collapsed sidebar */
+  body.dark-mode .sidebar-container.collapsed {
+    background-color: #111111 !important;
+  }
+  
+  body:not(.dark-mode) .sidebar-container.collapsed {
+    background-color: #ffffff !important;
+  }

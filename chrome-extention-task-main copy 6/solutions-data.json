@@ -1,0 +1,242 @@
+{
+  "speech": {
+    "voiceControl": [
+      {
+        "id": "browser-voice-control",
+        "title": "Chrome Voice Control Settings",
+        "description": "Enable built-in voice commands in Chrome",
+        "link": "chrome://settings/accessibility",
+        "users": 8742,
+        "tags": ["popular", "easiest", "$0"]
+      },
+      {
+        "id": "voice-in-mind",
+        "title": "Voice In Mind Extension",
+        "description": "Third-party extension for enhanced voice control with customizable commands",
+        "link": "https://chrome.google.com/webstore/detail/voice-in-mind/sample",
+        "users": 3521,
+        "tags": ["AI", "$0"]
+      },
+      {
+        "id": "windows-voice",
+        "title": "Windows Speech Recognition",
+        "description": "Use Windows built-in speech recognition for voice control",
+        "link": "ms-settings:easeofaccess-speechrecognition",
+        "users": 12453,
+        "tags": ["popular", "$0"]
+      }
+    ],
+    "speechToText": [
+      {
+        "id": "dictation-chrome",
+        "title": "Chrome Dictation",
+        "description": "Use Chrome's built-in dictation feature",
+        "link": "https://support.google.com/chromebook/answer/177794",
+        "users": 15632,
+        "tags": ["popular", "easiest", "$0"]
+      },
+      {
+        "id": "speechify",
+        "title": "Speechify",
+        "description": "Advanced speech-to-text service with AI enhancement",
+        "link": "https://speechify.com/",
+        "users": 9587,
+        "tags": ["AI", "premium"]
+      },
+      {
+        "id": "dragon-naturally",
+        "title": "Dragon Naturally Speaking",
+        "description": "Professional speech recognition software",
+        "link": "https://www.nuance.com/dragon.html",
+        "users": 7548,
+        "tags": ["NLP", "premium"]
+      }
+    ],
+    "noSpeechOnly": [
+      {
+        "id": "keyboard-shortcuts",
+        "title": "Keyboard Shortcuts",
+        "description": "Use keyboard shortcuts as alternatives to voice commands",
+        "link": "https://support.google.com/chrome/answer/157179",
+        "users": 24879,
+        "tags": ["popular", "easiest", "$0"]
+      },
+      {
+        "id": "mouse-gestures",
+        "title": "CrxMouse Gestures",
+        "description": "Use mouse gestures as an alternative to voice commands",
+        "link": "https://chrome.google.com/webstore/detail/crxmouse-chrome-gestures/jlgkpaicikihijadgifklkbpdajbkhjo",
+        "users": 8932,
+        "tags": ["$0"]
+      }
+    ]
+  },
+  "vision": {
+    "screenReader": [
+      {
+        "id": "chrome-screen-reader",
+        "title": "ChromeVox Screen Reader",
+        "description": "Built-in screen reader for Chrome",
+        "link": "chrome://settings/accessibility",
+        "users": 18754,
+        "tags": ["popular", "easiest", "$0"]
+      },
+      {
+        "id": "nvda-screen-reader",
+        "title": "NVDA Screen Reader",
+        "description": "Free, open-source screen reader for Windows",
+        "link": "https://www.nvaccess.org/download/",
+        "users": 32154,
+        "tags": ["popular", "$0"]
+      }
+    ],
+    "keyboardNavigation": [
+      {
+        "id": "vimium",
+        "title": "Vimium Extension",
+        "description": "Navigate and control Chrome with keyboard shortcuts",
+        "link": "https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb",
+        "users": 15467,
+        "tags": ["popular", "$0"]
+      },
+      {
+        "id": "tab-navigation",
+        "title": "Tab Navigation",
+        "description": "Navigate websites using the Tab key",
+        "link": "https://www.w3.org/WAI/people-use-web/user-stories/",
+        "users": 29876,
+        "tags": ["easiest", "$0"]
+      }
+    ],
+    "highContrast": [
+      {
+        "id": "high-contrast",
+        "title": "High Contrast Extension",
+        "description": "Improve readability with custom color schemes",
+        "link": "https://chrome.google.com/webstore/detail/high-contrast/djcfdncoelnlbldjfhinnjlhdjlikmph",
+        "users": 21543,
+        "tags": ["popular", "$0"]
+      },
+      {
+        "id": "dark-reader",
+        "title": "Dark Reader",
+        "description": "Dark mode for every website to reduce eye strain",
+        "link": "https://chrome.google.com/webstore/detail/dark-reader/eimadpbcbfnmbkopoojfekhnkhdbieeh",
+        "users": 35421,
+        "tags": ["popular", "easiest", "$0"]
+      }
+    ]
+  },
+  "hearing": {
+    "captions": [
+      {
+        "id": "live-caption",
+        "title": "Live Caption",
+        "description": "Automatic captions for audio and video content",
+        "link": "chrome://settings/accessibility",
+        "users": 14752,
+        "tags": ["popular", "easiest", "$0", "AI"]
+      },
+      {
+        "id": "webcaptioner",
+        "title": "Web Captioner",
+        "description": "Real-time captioning for any audio source",
+        "link": "https://webcaptioner.com/",
+        "users": 8965,
+        "tags": ["AI", "$0"]
+      }
+    ],
+    "transcripts": [
+      {
+        "id": "otter-ai",
+        "title": "Otter.ai",
+        "description": "AI-powered meeting notes and transcription",
+        "link": "https://otter.ai/",
+        "users": 12543,
+        "tags": ["popular", "AI", "premium"]
+      },
+      {
+        "id": "youtube-transcripts",
+        "title": "YouTube Transcripts",
+        "description": "Access transcripts for YouTube videos",
+        "link": "https://support.google.com/youtube/answer/6373554",
+        "users": 28754,
+        "tags": ["popular", "easiest", "$0"]
+      }
+    ],
+    "visualAlerts": [
+      {
+        "id": "flash-notifications",
+        "title": "Flash Notifications",
+        "description": "Flash the screen for audio notifications",
+        "link": "chrome://settings/accessibility",
+        "users": 9856,
+        "tags": ["easiest", "$0"]
+      },
+      {
+        "id": "visual-notification-alerts",
+        "title": "Visual Notification Alerts",
+        "description": "Convert audio alerts to visual notifications",
+        "link": "https://chrome.google.com/webstore/detail/visual-notification-alert/sample",
+        "users": 6754,
+        "tags": ["$0"]
+      }
+    ]
+  },
+  "cognitive": {
+    "simpleLanguage": [
+      {
+        "id": "hemingway-editor",
+        "title": "Hemingway Editor",
+        "description": "Make your text clear and bold with readability suggestions",
+        "link": "https://hemingwayapp.com/",
+        "users": 18542,
+        "tags": ["popular", "$0"]
+      },
+      {
+        "id": "rewordify",
+        "title": "Rewordify",
+        "description": "Simplifies difficult English into easier text",
+        "link": "https://rewordify.com/",
+        "users": 12654,
+        "tags": ["NLP", "$0"]
+      }
+    ],
+    "consistentNavigation": [
+      {
+        "id": "reader-view",
+        "title": "Reader View",
+        "description": "Simplify page layout for distraction-free reading",
+        "link": "https://support.mozilla.org/en-US/kb/firefox-reader-view-clutter-free-web-pages",
+        "users": 24857,
+        "tags": ["popular", "easiest", "$0"]
+      },
+      {
+        "id": "mercury-reader",
+        "title": "Mercury Reader",
+        "description": "Clear away clutter from articles",
+        "link": "https://chrome.google.com/webstore/detail/mercury-reader/oknpjjbmpnndlpmnhmekjpocelpnlfdi",
+        "users": 14532,
+        "tags": ["easiest", "$0"]
+      }
+    ],
+    "errorPrevention": [
+      {
+        "id": "grammarly",
+        "title": "Grammarly",
+        "description": "Catch errors and improve writing",
+        "link": "https://chrome.google.com/webstore/detail/grammarly-grammar-checker/kbfnbcaeplbcioakkpcpgfkobkghlhen",
+        "users": 42568,
+        "tags": ["popular", "AI", "freemium"]
+      },
+      {
+        "id": "form-filler",
+        "title": "Form Filler",
+        "description": "Automatically fill forms to prevent errors",
+        "link": "https://chrome.google.com/webstore/detail/form-filler/bnjjngeaknajbdcgpfkgnonkmififhfo",
+        "users": 15487,
+        "tags": ["$0"]
+      }
+    ]
+  }
+}
