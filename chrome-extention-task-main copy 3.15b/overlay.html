@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>unless</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #000000;
+      --secondary-color: #f5f5f5;
+      --text-color: #000000;
+      --text-secondary: #555555;
+      --border-color: #cccccc;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --bg-color: #ffffff;
+      --icon-bg-color: #f5f5f5;
+      --icon-color: #000000;
+      --success-color: #4CAF50;
+      --warning-color: #FF9800;
+      --error-color: #F44336;
+      --excellent-color: #2E7D32;
+      --good-color: #43A047;
+      --fair-color: #FB8C00;
+      --poor-color: #E53935;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      overflow: hidden;
+      transition: color 0.3s ease, background-color 0.3s ease;
+      width: 100%;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    body.dark-mode {
+      --primary-color: #ffffff;
+      --secondary-color: #222222;
+      --text-color: #ffffff;
+      --text-secondary: #aaaaaa;
+      --border-color: #444444;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+      --bg-color: #111111;
+      --icon-bg-color: #333333;
+      --icon-color: #ffffff;
+    }
+
+    /* Sidebar Container */
+    .sidebar-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 280px;
+      position: relative;
+      background-color: var(--bg-color);
+      transition: width 0.3s ease;
+      overflow: hidden;
+    }
+
+    .sidebar-container.collapsed {
+      width: 70px;
+    }
+
+    /* Header */
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid var(--border-color);
+      min-height: 50px;
+      position: relative;
+    }
+
+    .sidebar-header .logo {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .sidebar-header-drag {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      cursor: grab;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+
+    .control-button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    /* Accessibility Score */
+    .accessibility-score-container {
+      background-color: var(--secondary-color);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px;
+      text-align: center;
+    }
+
+    .score-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid var(--primary-color);
+      margin: 10px auto;
+    }
+
+    .score-number {
+      font-weight: bold;
+      font-size: 24px;
+    }
+
+    .score-percent {
+      font-size: 12px;
+    }
+
+    .score-circle.poor { border-color: var(--poor-color); }
+    .score-circle.fair { border-color: var(--fair-color); }
+    .score-circle.good { border-color: var(--good-color); }
+    .score-circle.excellent { border-color: var(--excellent-color); }
+
+    .tell-me-button {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      color: var(--text-color);
+      font-size: 0.85rem;
+      margin-top: 5px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 4px;
+    }
+
+    .tell-me-button:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .tell-me-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Navigation */
+    .sidebar-nav {
+      display: flex;
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-item {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    .nav-item:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .nav-item.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    /* Content */
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .spinner {
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-top: 3px solid var(--primary-color);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Feature Items */
+    .feature-item {
+      padding: 12px;
+      border-radius: 8px;
+      background-color: var(--secondary-color);
+      margin-bottom: 15px;
+    }
+
+    .feature-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .feature-name {
+      font-weight: bold;
+    }
+
+    .feature-status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-available {
+      background-color: rgba(76, 175, 80, 0.2);
+      color: var(--success-color);
+    }
+
+    .status-unavailable {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: var(--error-color);
+    }
+
+    .feature-description {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    /* Buttons */
+    .solutions-button, .settings-button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .solutions-button:hover, .settings-button:hover {
+      opacity: 0.9;
+    }
+
+    /* Footer */
+    .sidebar-footer {
+      padding: 15px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .footer-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    #analyzeButton {
+      flex: 1;
+      padding: 10px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #export-report, .setting-button {
+      padding: 10px;
+      background-color: var(--secondary-color);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Chat Icon in corner */
+    .chat-icon-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 25px;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      border: none;
+      z-index: 1000;
+    }
+
+    /* Chat Panel */
+    .chat-panel {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 320px;
+      height: 400px;
+      background-color: var(--bg-color);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      display: none;
+      border: 1px solid var(--border-color);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      background-color: var(--primary-color);
+      color: white;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+
+    .chat-title {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .chat-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background-color: var(--primary-color);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-input-container {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      resize: none;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      max-height: 80px;
+      min-height: 20px;
+    }
+
+    .chat-buttons {
+      display: flex;
+      gap: 5px;
+      margin-left: 8px;
+    }
+
+    .chat-button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      position: absolute;
+      top: 60px;
+      right: 15px;
+      width: 250px;
+      background-color: var(--bg-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      border: 1px solid var(--border-color);
+      display: none;
+    }
+
+    .settings-header {
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 500;
+    }
+
+    .settings-menu {
+      padding: 5px 0;
+    }
+
+    .settings-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .settings-item:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .settings-item svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Analytics Panel */
+    .analytics-panel {
+      position: absolute;
+      top: 60px;
+      right: 15px;
+      width: 300px;
+      background-color: var(--bg-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      border: 1px solid var(--border-color);
+      display: none;
+      padding: 0;
+    }
+
+    .analytics-header {
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .analytics-content {
+      padding: 15px;
+    }
+
+    .analytics-metric {
+      margin-bottom: 15px;
+    }
+
+    .metric-name {
+      font-weight: 500;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .metric-caption {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .analytics-chart {
+      margin-top: 20px;
+      height: 150px;
+    }
+
+    .analytics-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .analytics-toggle-label {
+      font-size: 14px;
+    }
+
+    /* Collapsed state */
+    .sidebar-container.collapsed .logo-container {
+      margin: 0 auto;
+    }
+
+    .sidebar-container.collapsed .header-controls {
+      margin-right: -100px;
+    }
+
+    .sidebar-container.collapsed .accessibility-score-container,
+    .sidebar-container.collapsed .sidebar-nav,
+    .sidebar-container.collapsed .sidebar-content,
+    .sidebar-container.collapsed .sidebar-footer {
+      display: none;
+    }
+
+    .expand-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 5px 8px;
+      background-color: var(--secondary-color);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .sidebar-container.collapsed .expand-button {
+      display: block;
+    }
+
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      color: var(--text-color);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .mode-toggle:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .mode-toggle svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Solutions container */
+    .solutions-container,
+    .settings-container {
+      background-color: var(--bg-color);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px var(--shadow-color);
+    }
+
+    /* Community Data */
+    .community-data {
+      background-color: rgba(0, 0, 0, 0.03);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 15px;
+      border: 1px solid var(--border-color);
+    }
+
+    body.dark-mode .community-data {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Category Title */
+    .category-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-container">
+    <!-- Header with Drag Handle and Logo -->
+    <div class="sidebar-header">
+      <div class="sidebar-header-drag" id="drag-handle"></div>
+      <div class="logo">unless</div>
+      <div class="header-controls">
+        <button id="settings-toggle" class="control-button" title="Settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+        <button id="minimizeButton" class="control-button" title="Minimize">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <button id="closeButton" class="control-button" title="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <button class="expand-button">Expand</button>
+    </div>
+    
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="settings-panel">
+      <div class="settings-header">Settings</div>
+      <div class="settings-menu">
+        <div class="settings-item" id="onboarding-link">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          Back to Onboarding
+        </div>
+        <div class="settings-item" id="export-solutions">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export Solutions
+        </div>
+        <div class="settings-item" id="view-analytics">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          User Analytics
+        </div>
+        <div class="settings-item" id="contact-samantha">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          Contact Samantha
+        </div>
+        <div class="settings-item" id="toggle-theme">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="light-icon">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dark-icon" style="display:none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          Toggle Theme
+        </div>
+      </div>
+    </div>
+    
+    <!-- Analytics Panel -->
+    <div id="analytics-panel" class="analytics-panel">
+      <div class="analytics-header">
+        <span>User Analytics</span>
+        <button id="close-analytics" class="control-button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="analytics-content">
+        <div class="analytics-metric">
+          <div class="metric-name">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 11.08V8l-8-5-8 5v8l8 5 8-5v-3.08c-1.85.23-3.3.31-4.9-1.24-1.65-1.6-1.65-3.94 0-5.54C11.7 8.14 13.15 8.23 15 8M7.01 10.04L12 12.52l3.44-2.23"></path>
+            </svg>
+            Scanned Pages
+          </div>
+          <div class="metric-value" id="scanned-pages-count">0</div>
+          <div class="metric-caption">Total pages analyzed</div>
+        </div>
+        
+        <div class="analytics-metric">
+          <div class="metric-name">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 11 12 14 22 4"></polyline>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            Solution Clicks
+          </div>
+          <div class="metric-value" id="solution-clicks-count">0</div>
+          <div class="metric-caption">Feature solutions accessed</div>
+        </div>
+        
+        <div class="analytics-metric">
+          <div class="metric-name">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+            Feature Category Clicks
+          </div>
+          <div class="analytics-chart" id="feature-category-chart">
+            <div id="chart-placeholder">Chart data loading...</div>
+          </div>
+        </div>
+        
+        <div class="analytics-toggle">
+          <input type="checkbox" id="analytics-enabled-toggle" checked>
+          <span class="analytics-toggle-label">Enable analytics collection</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Readiness Score -->
+    <div class="accessibility-score-container">
+      <div>Readiness Report</div>
+      <div class="score-circle" id="readiness-score-circle">
+        <div class="score-number" id="accessibility-score">--</div>
+        <div class="score-percent">%</div>
+      </div>
+      <div id="score-description">Scan a page to see results</div>
+      <button class="tell-me-button" id="tell-me-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        </svg>
+        Tell me about features
+      </button>
+    </div>
+    
+    <!-- Main Navigation -->
+    <div class="sidebar-nav">
+      <div class="nav-item active" data-tab="speech">Speech</div>
+      <div class="nav-item" data-tab="vision">Vision</div>
+      <div class="nav-item" data-tab="hearing">Hearing</div>
+      <div class="nav-item" data-tab="cognitive">Cognitive</div>
+    </div>
+    
+    <!-- Content Area -->
+    <div class="sidebar-content">
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Waiting to analyze page...</div>
+      </div>
+      
+      <div id="speech-content" class="tab-content active"></div>
+      <div id="vision-content" class="tab-content"></div>
+      <div id="hearing-content" class="tab-content"></div>
+      <div id="cognitive-content" class="tab-content"></div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <button id="analyzeButton">Analyze Page</button>
+      <div class="footer-buttons">
+        <button id="export-report" title="Export Readiness Report">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+        <button id="theme-toggle" class="mode-toggle" title="Toggle Theme">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="light-icon">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dark-icon" style="display:none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Icon Button -->
+  <button class="chat-icon-button" id="chat-icon-button" title="Ask Multimodal Expert">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+  </button>
+  
+  <!-- Chat Panel -->
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+      <div class="chat-title">Multimodal Expert</div>
+      <div class="chat-controls">
+        <button id="minimize-chat" class="control-button" title="Minimize">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <button id="close-chat" class="control-button" title="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="message assistant">
+        <div class="message-content">
+          Hi! I'm your multimodal expert. I can help with accessibility features, multimodal tools, and answer your questions. What would you like to know today?
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-container">
+      <textarea id="chat-input" class="chat-input" placeholder="Ask about multimodal features..."></textarea>
+      <div class="chat-buttons">
+        <button id="voice-input-button" class="chat-button" title="Voice Input">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+        <button id="send-message" class="chat-button" title="Send Message">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="overlay.js"></script>
+</body>
+</html>
