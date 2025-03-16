@@ -1,4 +1,4 @@
-// Background script for unless Accessibility Analyzer
+// Improved Background Script for "unless" Extension
 
 // Global state tracking
 let userPreferences = {
@@ -32,7 +32,8 @@ let userPreferences = {
   },
   autoScan: true,
   showRecommendations: true,
-  userAnalytics: true
+  userAnalytics: true,
+  darkMode: false
 };
 
 // User analytics data
@@ -53,112 +54,293 @@ let userAnalytics = {
 // Preload solutions data
 let solutionsDatabase = {};
 
-// Track pending analyses that need permissions
-let pendingAnalyses = {};
+// Initialize extension
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") {
+    // First time installation - set onboarding flag
+    chrome.storage.local.set({ firstUse: true });
+  }
+  
+  // Load solutions data
+  loadSolutionsData();
+  
+  // Load any saved preferences
+  loadUserPreferences();
+});
 
-// Permission handling
-function checkAndRequestPermission(url, tabId) {
-  return new Promise((resolve) => {
-    // Skip for chrome:// URLs which can't be accessed
-    if (url.startsWith('chrome://')) {
-      console.log('Chrome URLs cannot be accessed by extensions');
-      return resolve(false);
+// Load user preferences from storage
+function loadUserPreferences() {
+  chrome.storage.local.get(['userPreferences', 'userAnalytics'], (result) => {
+    if (result.userPreferences) {
+      userPreferences = { ...userPreferences, ...result.userPreferences };
     }
     
-    // Create a pattern that matches the host
-    try {
-      const urlObj = new URL(url);
-      const pattern = `${urlObj.protocol}//${urlObj.hostname}/*`;
-      
-      // Check if we already have permission
-      chrome.permissions.contains({
-        origins: [pattern]
-      }, (hasPermission) => {
-        if (hasPermission) {
-          // We already have permission
-          resolve(true);
-        } else {
-          // Store the pending analysis
-          pendingAnalyses[pattern] = {
-            url: url,
-            tabId: tabId,
-            timestamp: Date.now()
-          };
-          
-          // We need to request permission - notify the UI
-          chrome.tabs.sendMessage(tabId, {
-            action: "permissionNeeded",
-            url: url,
-            pattern: pattern,
-            tabId: tabId
-          });
-          
-          // Return false as we don't have permission yet
-          resolve(false);
-        }
-      });
-    } catch (e) {
-      console.error('Invalid URL format:', url);
-      resolve(false);
+    if (result.userAnalytics) {
+      userAnalytics = { ...userAnalytics, ...result.userAnalytics };
     }
   });
 }
 
-// Clean up old pending analyses (older than 10 minutes)
-function cleanupPendingAnalyses() {
-  const now = Date.now();
-  const tenMinutes = 10 * 60 * 1000;
-  
-  for (const pattern in pendingAnalyses) {
-    if (now - pendingAnalyses[pattern].timestamp > tenMinutes) {
-      delete pendingAnalyses[pattern];
+// Load solutions data (in a real extension, this might be from a JSON file)
+function loadSolutionsData() {
+  // Use data from solutions-data.json
+  solutionsDatabase = {
+    "speech": {
+      "voiceControl": [
+        {
+          "id": "browser-voice-control",
+          "title": "Chrome Voice Control Settings",
+          "description": "Enable built-in voice commands in Chrome",
+          "link": "chrome://settings/accessibility",
+          "users": 8742,
+          "tags": ["popular", "easiest", "$0"]
+        },
+        {
+          "id": "voice-in-mind",
+          "title": "Voice In Mind Extension",
+          "description": "Third-party extension for enhanced voice control with customizable commands",
+          "link": "https://chrome.google.com/webstore/detail/voice-in-mind/sample",
+          "users": 3521,
+          "tags": ["AI", "$0"]
+        },
+        {
+          "id": "windows-voice",
+          "title": "Windows Speech Recognition",
+          "description": "Use Windows built-in speech recognition for voice control",
+          "link": "ms-settings:easeofaccess-speechrecognition",
+          "users": 12453,
+          "tags": ["popular", "$0"]
+        }
+      ],
+      "speechToText": [
+        {
+          "id": "dictation-chrome",
+          "title": "Chrome Dictation",
+          "description": "Use Chrome's built-in dictation feature",
+          "link": "https://support.google.com/chromebook/answer/177794",
+          "users": 15632,
+          "tags": ["popular", "easiest", "$0"]
+        },
+        {
+          "id": "speechify",
+          "title": "Speechify",
+          "description": "Advanced speech-to-text service with AI enhancement",
+          "link": "https://speechify.com/",
+          "users": 9587,
+          "tags": ["AI", "premium"]
+        },
+        {
+          "id": "dragon-naturally",
+          "title": "Dragon Naturally Speaking",
+          "description": "Professional speech recognition software",
+          "link": "https://www.nuance.com/dragon.html",
+          "users": 7548,
+          "tags": ["NLP", "premium"]
+        }
+      ],
+      "noSpeechOnly": [
+        {
+          "id": "keyboard-shortcuts",
+          "title": "Keyboard Shortcuts",
+          "description": "Use keyboard shortcuts as alternatives to voice commands",
+          "link": "https://support.google.com/chrome/answer/157179",
+          "users": 24879,
+          "tags": ["popular", "easiest", "$0"]
+        },
+        {
+          "id": "mouse-gestures",
+          "title": "CrxMouse Gestures",
+          "description": "Use mouse gestures as an alternative to voice commands",
+          "link": "https://chrome.google.com/webstore/detail/crxmouse-chrome-gestures/jlgkpaicikihijadgifklkbpdajbkhjo",
+          "users": 8932,
+          "tags": ["$0"]
+        }
+      ]
+    },
+    "vision": {
+      "screenReader": [
+        {
+          "id": "chrome-screen-reader",
+          "title": "ChromeVox Screen Reader",
+          "description": "Built-in screen reader for Chrome",
+          "link": "chrome://settings/accessibility",
+          "users": 18754,
+          "tags": ["popular", "easiest", "$0"]
+        },
+        {
+          "id": "nvda-screen-reader",
+          "title": "NVDA Screen Reader",
+          "description": "Free, open-source screen reader for Windows",
+          "link": "https://www.nvaccess.org/download/",
+          "users": 32154,
+          "tags": ["popular", "$0"]
+        }
+      ],
+      "keyboardNavigation": [
+        {
+          "id": "vimium",
+          "title": "Vimium Extension",
+          "description": "Navigate and control Chrome with keyboard shortcuts",
+          "link": "https://chrome.google.com/webstore/detail/vimium/dbepggeogbaibhgnhhndojpepiihcmeb",
+          "users": 15467,
+          "tags": ["popular", "$0"]
+        },
+        {
+          "id": "tab-navigation",
+          "title": "Tab Navigation",
+          "description": "Navigate websites using the Tab key",
+          "link": "https://www.w3.org/WAI/people-use-web/user-stories/",
+          "users": 29876,
+          "tags": ["easiest", "$0"]
+        }
+      ],
+      "highContrast": [
+        {
+          "id": "high-contrast",
+          "title": "High Contrast Extension",
+          "description": "Improve readability with custom color schemes",
+          "link": "https://chrome.google.com/webstore/detail/high-contrast/djcfdncoelnlbldjfhinnjlhdjlikmph",
+          "users": 21543,
+          "tags": ["popular", "$0"]
+        },
+        {
+          "id": "dark-reader",
+          "title": "Dark Reader",
+          "description": "Dark mode for every website to reduce eye strain",
+          "link": "https://chrome.google.com/webstore/detail/dark-reader/eimadpbcbfnmbkopoojfekhnkhdbieeh",
+          "users": 35421,
+          "tags": ["popular", "easiest", "$0"]
+        }
+      ]
+    },
+    "hearing": {
+      "captions": [
+        {
+          "id": "live-caption",
+          "title": "Live Caption",
+          "description": "Automatic captions for audio and video content",
+          "link": "chrome://settings/accessibility",
+          "users": 14752,
+          "tags": ["popular", "easiest", "$0", "AI"]
+        },
+        {
+          "id": "webcaptioner",
+          "title": "Web Captioner",
+          "description": "Real-time captioning for any audio source",
+          "link": "https://webcaptioner.com/",
+          "users": 8965,
+          "tags": ["AI", "$0"]
+        }
+      ],
+      "transcripts": [
+        {
+          "id": "otter-ai",
+          "title": "Otter.ai",
+          "description": "AI-powered meeting notes and transcription",
+          "link": "https://otter.ai/",
+          "users": 12543,
+          "tags": ["popular", "AI", "premium"]
+        },
+        {
+          "id": "youtube-transcripts",
+          "title": "YouTube Transcripts",
+          "description": "Access transcripts for YouTube videos",
+          "link": "https://support.google.com/youtube/answer/6373554",
+          "users": 28754,
+          "tags": ["popular", "easiest", "$0"]
+        }
+      ],
+      "visualAlerts": [
+        {
+          "id": "flash-notifications",
+          "title": "Flash Notifications",
+          "description": "Flash the screen for audio notifications",
+          "link": "chrome://settings/accessibility",
+          "users": 9856,
+          "tags": ["easiest", "$0"]
+        },
+        {
+          "id": "visual-notification-alerts",
+          "title": "Visual Notification Alerts",
+          "description": "Convert audio alerts to visual notifications",
+          "link": "https://chrome.google.com/webstore/detail/visual-notification-alert/sample",
+          "users": 6754,
+          "tags": ["$0"]
+        }
+      ]
+    },
+    "cognitive": {
+      "simpleLanguage": [
+        {
+          "id": "hemingway-editor",
+          "title": "Hemingway Editor",
+          "description": "Make your text clear and bold with readability suggestions",
+          "link": "https://hemingwayapp.com/",
+          "users": 18542,
+          "tags": ["popular", "$0"]
+        },
+        {
+          "id": "rewordify",
+          "title": "Rewordify",
+          "description": "Simplifies difficult English into easier text",
+          "link": "https://rewordify.com/",
+          "users": 12654,
+          "tags": ["NLP", "$0"]
+        }
+      ],
+      "consistentNavigation": [
+        {
+          "id": "reader-view",
+          "title": "Reader View",
+          "description": "Simplify page layout for distraction-free reading",
+          "link": "https://support.mozilla.org/en-US/kb/firefox-reader-view-clutter-free-web-pages",
+          "users": 24857,
+          "tags": ["popular", "easiest", "$0"]
+        },
+        {
+          "id": "mercury-reader",
+          "title": "Mercury Reader",
+          "description": "Clear away clutter from articles",
+          "link": "https://chrome.google.com/webstore/detail/mercury-reader/oknpjjbmpnndlpmnhmekjpocelpnlfdi",
+          "users": 14532,
+          "tags": ["easiest", "$0"]
+        }
+      ],
+      "errorPrevention": [
+        {
+          "id": "grammarly",
+          "title": "Grammarly",
+          "description": "Catch errors and improve writing",
+          "link": "https://chrome.google.com/webstore/detail/grammarly-grammar-checker/kbfnbcaeplbcioakkpcpgfkobkghlhen",
+          "users": 42568,
+          "tags": ["popular", "AI", "freemium"]
+        },
+        {
+          "id": "form-filler",
+          "title": "Form Filler",
+          "description": "Automatically fill forms to prevent errors",
+          "link": "https://chrome.google.com/webstore/detail/form-filler/bnjjngeaknajbdcgpfkgnonkmififhfo",
+          "users": 15487,
+          "tags": ["$0"]
+        }
+      ]
     }
-  }
+  };
 }
-
-// Run cleanup every 5 minutes
-setInterval(cleanupPendingAnalyses, 5 * 60 * 1000);
-
-// Load user preferences and data on startup
-chrome.storage.local.get(['userPreferences', 'firstUse', 'userAnalytics'], (result) => {
-  if (result.userPreferences) {
-    userPreferences = result.userPreferences;
-  }
-  
-  if (result.userAnalytics) {
-    userAnalytics = result.userAnalytics;
-  }
-  
-  if (result.firstUse === undefined) {
-    // First time user - set flag for onboarding
-    chrome.storage.local.set({ firstUse: true });
-  }
-  
-  // Load solutions database
-  fetch(chrome.runtime.getURL('solutions-data.json'))
-    .then(response => response.json())
-    .then(data => {
-      solutionsDatabase = data;
-    })
-    .catch(error => {
-      console.error('Error loading solutions database:', error);
-    });
-});
 
 // Handle extension icon click
 chrome.action.onClicked.addListener((tab) => {
   // Check if this is first use
-  chrome.storage.local.get(['firstUse'], async (result) => {
-    if (result.firstUse) {
-      // Open onboarding page
-      const onboardingUrl = chrome.runtime.getURL('onboarding.html');
-      await chrome.tabs.create({ url: onboardingUrl });
+  chrome.storage.local.get(['firstUse'], (result) => {
+    if (result.firstUse === true) {
+      // Show onboarding page
+      chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
     } else {
-      // Toggle the overlay in the content script
+      // Toggle overlay on current page
       chrome.tabs.sendMessage(tab.id, { action: "toggleOverlay" }, (response) => {
-        if (response && response.visible) {
-          // If overlay is now visible, run analysis
-          runAnalysis(tab.id);
+        // If no response, content script may not be loaded (e.g., Chrome settings page)
+        if (chrome.runtime.lastError) {
+          console.log("Content script not available:", chrome.runtime.lastError.message);
         }
       });
     }
@@ -166,207 +348,24 @@ chrome.action.onClicked.addListener((tab) => {
 });
 
 // Run the accessibility analysis
-async function runAnalysis(tabId) {
+function runAnalysis(tabId) {
   try {
-    // Get the current tab URL
-    const tab = await chrome.tabs.get(tabId);
-    const url = tab.url;
+    console.log("Running analysis on tab:", tabId);
     
-    // Skip analyzing extension pages and chrome:// URLs
-    if (url.startsWith('chrome-extension://') || url.startsWith('chrome://')) {
-      chrome.tabs.sendMessage(tabId, {
-        action: "analysisSkipped",
-        reason: "Cannot analyze browser or extension pages",
-        url: url
-      });
-      return;
-    }
-    
-    // Check permission first before running analysis
-    const hasPermission = await checkAndRequestPermission(url, tabId);
-    if (!hasPermission) {
-      // We'll wait for the user to grant permission via the dialog
-      console.log(`Waiting for permission to access ${url}`);
-      return;
-    }
-
-    // Update analytics for scanned pages
-    if (userPreferences.userAnalytics) {
-      userAnalytics.scannedPages++;
-      userAnalytics.lastScanDate = new Date().toISOString();
-      chrome.storage.local.set({ userAnalytics: userAnalytics });
-    }
-    
-    // Create analysis timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      chrome.tabs.sendMessage(tabId, {
-        action: "analysisTimeout",
-        tabId: tabId
-      });
-    }, 5000); // 5 second timeout
-    
-    // Track which detectors have completed
-    let completedDetectors = {
-      speech: !userPreferences.categories.speech,
-      cognitive: !userPreferences.categories.cognitive,
-      vision: !userPreferences.categories.vision,
-      hearing: !userPreferences.categories.hearing
-    };
-    
-    // Store scan start timestamp
-    const scanStartTime = Date.now();
-    
-    // Listen for detector completions
-    const detectorListener = (message, sender, sendResponse) => {
-      if (message.action === "analysisResults") {
-        completedDetectors[message.category] = true;
-        
-        // Forward results to the overlay
+    // Skip analyzing extension pages and Chrome settings
+    chrome.tabs.get(tabId, (tab) => {
+      const url = tab.url || '';
+      if (url.startsWith('chrome://') || url.startsWith('chrome-extension://')) {
         chrome.tabs.sendMessage(tabId, {
-          action: "updateResults",
-          category: message.category,
-          results: message.results,
-          url: sender.tab ? sender.tab.url : null,
-          scanTime: Date.now() - scanStartTime
+          action: "analysisSkipped",
+          reason: "Cannot analyze browser or extension pages",
+          url: url
         });
-        
-        // If all detectors have completed, clear timeout
-        if (Object.values(completedDetectors).every(Boolean)) {
-          clearTimeout(timeout);
-          chrome.runtime.onMessage.removeListener(detectorListener);
-          
-          // Update analytics for time spent analyzing
-          if (userPreferences.userAnalytics) {
-            userAnalytics.timeSpentAnalyzing += (Date.now() - scanStartTime);
-            chrome.storage.local.set({ userAnalytics: userAnalytics });
-          }
-        }
+        return;
       }
-      return true;
-    };
-    
-    // Add listener for detector completions
-    chrome.runtime.onMessage.addListener(detectorListener);
-    
-    // Construct detection script based on user preferences
-    let detectorScript = '';
-    
-    // Only include selected categories and features
-    if (userPreferences.categories.speech) {
-      detectorScript += `
-        // Speech feature detection
-        function detectSpeechFeatures() {
-          const results = {
-            voiceControl: false,
-            speechToText: false,
-            noSpeechOnly: true
-          };
-          
-          ${createFeatureDetectionCode('speech', 'voiceControl')}
-          ${createFeatureDetectionCode('speech', 'speechToText')}
-          ${createFeatureDetectionCode('speech', 'noSpeechOnly')}
-          
-          chrome.runtime.sendMessage({
-            action: "analysisResults",
-            category: "speech",
-            results: results
-          });
-        }
-        
-        detectSpeechFeatures();
-      `;
-    }
-    
-    if (userPreferences.categories.vision) {
-      detectorScript += `
-        // Vision feature detection
-        function detectVisionFeatures() {
-          const results = {
-            screenReader: false,
-            keyboardNavigation: false,
-            highContrast: false
-          };
-          
-          ${createFeatureDetectionCode('vision', 'screenReader')}
-          ${createFeatureDetectionCode('vision', 'keyboardNavigation')}
-          ${createFeatureDetectionCode('vision', 'highContrast')}
-          
-          chrome.runtime.sendMessage({
-            action: "analysisResults",
-            category: "vision",
-            results: results
-          });
-        }
-        
-        detectVisionFeatures();
-      `;
-    }
-    
-    if (userPreferences.categories.hearing) {
-      detectorScript += `
-        // Hearing feature detection
-        function detectHearingFeatures() {
-          const results = {
-            captions: false,
-            transcripts: false,
-            visualAlerts: false
-          };
-          
-          ${createFeatureDetectionCode('hearing', 'captions')}
-          ${createFeatureDetectionCode('hearing', 'transcripts')}
-          ${createFeatureDetectionCode('hearing', 'visualAlerts')}
-          
-          chrome.runtime.sendMessage({
-            action: "analysisResults",
-            category: "hearing",
-            results: results
-          });
-        }
-        
-        detectHearingFeatures();
-      `;
-    }
-    
-    if (userPreferences.categories.cognitive) {
-      detectorScript += `
-        // Cognitive feature detection
-        function detectCognitiveFeatures() {
-          const results = {
-            simpleLanguage: false,
-            consistentNavigation: false,
-            errorPrevention: false
-          };
-          
-          ${createFeatureDetectionCode('cognitive', 'simpleLanguage')}
-          ${createFeatureDetectionCode('cognitive', 'consistentNavigation')}
-          ${createFeatureDetectionCode('cognitive', 'errorPrevention')}
-          
-          chrome.runtime.sendMessage({
-            action: "analysisResults",
-            category: "cognitive",
-            results: results
-          });
-        }
-        
-        detectCognitiveFeatures();
-      `;
-    }
-    
-    // Execute the detection script
-    chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      world: "MAIN",
-      func: executeDetectors,
-      args: [detectorScript]
-    }).catch(error => {
-      console.error('Error executing script:', error);
-      chrome.tabs.sendMessage(tabId, {
-        action: "analysisError",
-        error: error.message,
-        tabId: tabId
-      });
-      clearTimeout(timeout);
-      chrome.runtime.onMessage.removeListener(detectorListener);
+      
+      // Proceed with analysis
+      performAnalysis(tabId, url);
     });
   } catch (error) {
     console.error('Error in runAnalysis:', error);
@@ -378,269 +377,93 @@ async function runAnalysis(tabId) {
   }
 }
 
-// Function to create feature detection code based on user preferences
-function createFeatureDetectionCode(category, feature) {
-  // Only include code for enabled features
-  if (!userPreferences.features[category][feature]) {
-    return `// ${feature} detection disabled by user preference`;
+// Perform the actual analysis
+function performAnalysis(tabId, url) {
+  // Update analytics for scanned pages
+  if (userPreferences.userAnalytics) {
+    userAnalytics.scannedPages++;
+    userAnalytics.lastScanDate = new Date().toISOString();
+    chrome.storage.local.set({ userAnalytics: userAnalytics });
   }
   
-  // Include the appropriate detection code for each feature
-  switch(category) {
-    case 'speech':
-      switch(feature) {
-        case 'voiceControl':
-          return `
-            // Check for voice control features
-            const hasVoiceAPI = !!(window.webkitSpeechRecognition || window.SpeechRecognition);
-            const voiceControls = document.querySelectorAll(
-              '[aria-label*="voice"], [class*="voice"], [id*="voice"], ' +
-              '[aria-label*="speech"], [class*="speech"], [id*="speech"]'
-            );
-            results.voiceControl = hasVoiceAPI && voiceControls.length > 0;
-          `;
-        case 'speechToText':
-          return `
-            // Check for speech-to-text features
-            const micButtons = document.querySelectorAll(
-              '[class*="microphone"], [class*="mic-"], [id*="microphone"], ' +
-              'button[class*="mic"], [aria-label*="microphone"], [aria-label*="dictate"]'
-            );
-            results.speechToText = hasVoiceAPI && micButtons.length > 0;
-          `;
-        case 'noSpeechOnly':
-          return `
-            // Check for speech-only interfaces
-            const speechOnlyElements = document.querySelectorAll(
-              '[aria-label*="voice only"], [aria-label*="speech only"], ' +
-              '[class*="voice-only"], [class*="speech-only"]'
-            );
-            if (speechOnlyElements.length > 0) {
-              results.noSpeechOnly = false;
-            }
-          `;
-      }
-      break;
+  // Create analysis timeout to prevent infinite loading
+  const timeout = setTimeout(() => {
+    chrome.tabs.sendMessage(tabId, {
+      action: "analysisTimeout",
+      tabId: tabId
+    });
+  }, 10000); // 10 second timeout
+  
+  // Track which detectors have completed
+  let completedDetectors = {
+    speech: !userPreferences.categories.speech,
+    cognitive: !userPreferences.categories.cognitive,
+    vision: !userPreferences.categories.vision,
+    hearing: !userPreferences.categories.hearing
+  };
+  
+  // Store scan start timestamp
+  const scanStartTime = Date.now();
+  
+  // Listen for detector completions
+  const detectorListener = (message, sender, sendResponse) => {
+    if (message.action === "analysisResults") {
+      completedDetectors[message.category] = true;
       
-    case 'vision':
-      switch(feature) {
-        case 'screenReader':
-          return `
-            // Check for screen reader compatibility
-            const ariaAttributes = document.querySelectorAll(
-              '[aria-label], [aria-labelledby], [aria-describedby], [aria-description], ' +
-              '[aria-hidden], [aria-live], [role]'
-            );
-            
-            const images = document.querySelectorAll('img');
-            const imagesWithAlt = document.querySelectorAll('img[alt]');
-            const altTextRatio = images.length > 0 ? imagesWithAlt.length / images.length : 0;
-            
-            results.screenReader = ariaAttributes.length > 5 || altTextRatio > 0.7;
-          `;
-        case 'keyboardNavigation':
-          return `
-            // Check for keyboard navigation
-            const focusableElements = document.querySelectorAll(
-              'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            );
-            const customTabIndex = document.querySelectorAll('[tabindex]:not([tabindex="-1"])');
-            
-            results.keyboardNavigation = focusableElements.length > 0 || customTabIndex.length > 0;
-          `;
-        case 'highContrast':
-          return `
-            // Check for high contrast
-            const hasViewportMeta = document.querySelector('meta[name="viewport"][content*="user-scalable=yes"]') !== null ||
-                                 document.querySelector('meta[name="viewport"][content*="maximum-scale"]') === null;
-                                 
-            // Basic contrast check on body
-            const bodyStyle = window.getComputedStyle(document.body);
-            const bodyColor = bodyStyle.color;
-            const bodyBg = bodyStyle.backgroundColor;
-            let hasGoodContrast = false;
-            
-            if (bodyColor && bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)') {
-              const textRGB = extractRGB(bodyColor);
-              const bgRGB = extractRGB(bodyBg);
-              
-              if (textRGB && bgRGB) {
-                const textLuminance = 0.299 * textRGB.r + 0.587 * textRGB.g + 0.114 * textRGB.b;
-                const bgLuminance = 0.299 * bgRGB.r + 0.587 * bgRGB.g + 0.114 * bgRGB.b;
-                hasGoodContrast = Math.abs(textLuminance - bgLuminance) > 125;
-              }
-            }
-            
-            results.highContrast = hasViewportMeta || hasGoodContrast;
-            
-            // Helper function to extract RGB values
-            function extractRGB(colorString) {
-              const match = colorString.match(/rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*(?:,\\s*[\\d.]+\\s*)?\\)/i);
-              if (match) {
-                return {
-                  r: parseInt(match[1]),
-                  g: parseInt(match[2]),
-                  b: parseInt(match[3])
-                };
-              }
-              return null;
-            }
-          `;
-      }
-      break;
+      // Forward results to the overlay
+      chrome.tabs.sendMessage(tabId, {
+        action: "updateResults",
+        category: message.category,
+        results: message.results,
+        url: sender.tab ? sender.tab.url : url,
+        scanTime: Date.now() - scanStartTime
+      });
       
-    case 'hearing':
-      switch(feature) {
-        case 'captions':
-          return `
-            // Check for captions
-            const videosWithCaptions = document.querySelectorAll('video > track[kind="captions"], video > track[kind="subtitles"]');
-            const captionControls = document.querySelectorAll(
-              '[class*="caption"], [class*="subtitle"], [id*="caption"], [id*="subtitle"], ' +
-              'button[aria-label*="caption"], button[aria-label*="subtitle"]'
-            );
-            
-            results.captions = videosWithCaptions.length > 0 || captionControls.length > 0;
-          `;
-        case 'transcripts':
-          return `
-            // Check for transcripts
-            const transcriptSections = document.querySelectorAll(
-              '[class*="transcript"], [id*="transcript"], [aria-label*="transcript"], ' +
-              'section:contains("Transcript"), div:contains("Transcript"), h2:contains("Transcript"), ' +
-              'h3:contains("Transcript"), h4:contains("Transcript")'
-            );
-            
-            const transcriptLinks = document.querySelectorAll(
-              'a:contains("transcript"), a[href*="transcript"], a[download*="transcript"], ' +
-              'a[aria-label*="transcript"], button:contains("transcript")'
-            );
-            
-            results.transcripts = transcriptSections.length > 0 || transcriptLinks.length > 0;
-          `;
-        case 'visualAlerts':
-          return `
-            // Check for visual alerts
-            const notifications = document.querySelectorAll(
-              '[role="alert"], [aria-live="assertive"], [aria-live="polite"], ' +
-              '.alert, .notification, .toast, [class*="alert"], [class*="notification"], ' +
-              '[id*="alert"], [id*="notification"]'
-            );
-            
-            const visualIndicators = document.querySelectorAll(
-              '.badge, .indicator, [class*="badge"], [class*="indicator"], ' +
-              '[class*="icon"][class*="notification"], [class*="status-icon"]'
-            );
-            
-            results.visualAlerts = notifications.length > 0 || visualIndicators.length > 0;
-          `;
+      // If all detectors have completed, clear timeout
+      if (Object.values(completedDetectors).every(Boolean)) {
+        clearTimeout(timeout);
+        chrome.runtime.onMessage.removeListener(detectorListener);
+        
+        // Update analytics for time spent analyzing
+        if (userPreferences.userAnalytics) {
+          userAnalytics.timeSpentAnalyzing += (Date.now() - scanStartTime);
+          chrome.storage.local.set({ userAnalytics: userAnalytics });
+        }
+        
+        // Send analysis complete message
+        chrome.tabs.sendMessage(tabId, {
+          action: "analysisComplete"
+        });
       }
-      break;
       
-    case 'cognitive':
-      switch(feature) {
-        case 'simpleLanguage':
-          return `
-            // Check for simple language
-            const textElements = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, td, th');
-            const samplesToCheck = Math.min(textElements.length, 10);
-            let totalWords = 0;
-            let complexWords = 0;
-            let longSentences = 0;
-            let sentenceCount = 0;
-            
-            for (let i = 0; i < samplesToCheck; i++) {
-              const text = textElements[i].textContent.trim();
-              if (!text) continue;
-              
-              const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-              sentenceCount += sentences.length;
-              
-              const words = text.split(/\\s+/).filter(w => w.length > 0);
-              totalWords += words.length;
-              
-              for (const word of words) {
-                const syllables = word.toLowerCase().replace(/[^aeiouy]+/g, ' ').trim().split(' ').length;
-                if (syllables >= 3 && word.length > 6) {
-                  complexWords++;
-                }
-              }
-              
-              for (const sentence of sentences) {
-                const wordCount = sentence.split(/\\s+/).filter(w => w.length > 0).length;
-                if (wordCount > 20) {
-                  longSentences++;
-                }
-              }
-            }
-            
-            if (totalWords > 0 && sentenceCount > 0) {
-              const complexWordPercentage = complexWords / totalWords;
-              const longSentencePercentage = longSentences / sentenceCount;
-              results.simpleLanguage = (complexWordPercentage < 0.15 && longSentencePercentage < 0.3);
-            }
-          `;
-        case 'consistentNavigation':
-          return `
-            // Check for consistent navigation
-            const hasNavElement = document.querySelectorAll('nav, [role="navigation"]').length > 0;
-            const hasHeaderElement = document.querySelectorAll('header, [role="banner"]').length > 0;
-            const hasMainElement = document.querySelectorAll('main, [role="main"]').length > 0;
-            const hasFooterElement = document.querySelectorAll('footer, [role="contentinfo"]').length > 0;
-            
-            const navigationScore = [
-              hasNavElement, 
-              hasHeaderElement, 
-              hasMainElement,
-              hasFooterElement
-            ].filter(Boolean).length;
-            
-            results.consistentNavigation = navigationScore >= 2;
-          `;
-        case 'errorPrevention':
-          return `
-            // Check for error prevention
-            const requiredFields = document.querySelectorAll('[required], [aria-required="true"]');
-            
-            const validationAttributes = document.querySelectorAll(
-              '[type="email"], [type="tel"], [type="url"], [type="number"], [type="date"], ' +
-              '[minlength], [maxlength], [min], [max], [pattern]'
-            );
-            
-            const errorMessages = document.querySelectorAll(
-              '[class*="error"], [id*="error"], [class*="validation"], [id*="validation"], ' +
-              '[role="alert"], .invalid-feedback, .form-error'
-            );
-            
-            results.errorPrevention = requiredFields.length > 0 || 
-                                    validationAttributes.length > 0 || 
-                                    errorMessages.length > 0;
-          `;
-      }
-      break;
+      return true;
+    }
+  };
+  
+  // Add listener for detector completions
+  chrome.runtime.onMessage.addListener(detectorListener);
+  
+  // Tell content script to run detectors
+  const categoriesToDetect = [];
+  for (const category in userPreferences.categories) {
+    if (userPreferences.categories[category]) {
+      categoriesToDetect.push(category);
+    }
   }
   
-  return '';
+  chrome.tabs.sendMessage(tabId, {
+    action: "runDetectors",
+    categories: categoriesToDetect
+  });
 }
 
-// Function to execute detectors in the context of the page
-function executeDetectors(detectorScript) {
-  // Create a script element
-  const script = document.createElement('script');
-  script.textContent = detectorScript;
-  
-  // Append to document and execute
-  document.documentElement.appendChild(script);
-  
-  // Clean up
-  document.documentElement.removeChild(script);
-}
-
-// Handle messages from content script and UI
+// Handle messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("Background received message:", message);
+  
   if (message.action === "savePreferences") {
     // Update user preferences
-    userPreferences = message.preferences;
+    userPreferences = { ...userPreferences, ...message.preferences };
     chrome.storage.local.set({ userPreferences: userPreferences });
     
     // If the message includes a tabId, run analysis with new preferences
@@ -649,6 +472,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     
     sendResponse({ success: true });
+    return true;
   } 
   else if (message.action === "runAnalysis") {
     // Run analysis for the specified tab
@@ -665,39 +489,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     
     sendResponse({ success: true });
+    return true;
   }
-  else if (message.action === "requestPermission") {
-    // Handle permission request
-    chrome.permissions.request({
-      origins: [message.pattern]
-    }, (granted) => {
-      // Inform UI of the result
-      chrome.tabs.sendMessage(sender.tab.id, {
-        action: "permissionResult",
-        granted: granted,
-        pattern: message.pattern,
-        url: message.url
-      });
-      
-      // If granted and we have a pending analysis, run it
-      if (granted && pendingAnalyses[message.pattern]) {
-        const pendingAnalysis = pendingAnalyses[message.pattern];
-        delete pendingAnalyses[message.pattern];
-        
-        if (pendingAnalysis.tabId) {
-          runAnalysis(pendingAnalysis.tabId);
-        }
-      }
-      
-      sendResponse({granted: granted});
-    });
-    return true; // Required for async sendResponse
+  else if (message.action === "saveThemePreference") {
+    // Save theme preference
+    userPreferences.darkMode = message.darkMode;
+    chrome.storage.local.set({ userPreferences: userPreferences });
+    
+    sendResponse({ success: true });
+    return true;
   }
   else if (message.action === "openOnboarding") {
     // Open the onboarding page
     chrome.tabs.create({ url: chrome.runtime.getURL('onboarding.html') });
     
     sendResponse({ success: true });
+    return true;
   }
   else if (message.action === "onboardingComplete") {
     // Mark first use as false after completing onboarding
@@ -705,28 +512,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     
     // Update user preferences if provided
     if (message.preferences) {
-      userPreferences = message.preferences;
+      userPreferences = { ...userPreferences, ...message.preferences };
       chrome.storage.local.set({ userPreferences: userPreferences });
     }
     
-    // Open current tab with extension
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs && tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: "toggleOverlay" }, (response) => {
-          if (response && response.visible) {
-            runAnalysis(tabs[0].id);
-          }
-        });
-      }
-    });
+    // Open active tab with overlay if requested
+    if (message.showOverlay) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs && tabs[0]) {
+          chrome.tabs.sendMessage(tabs[0].id, { action: "toggleOverlay" });
+        }
+      });
+    }
     
     sendResponse({ success: true });
+    return true;
   }
   else if (message.action === "updateAnalytics") {
     // Update analytics data
     if (userPreferences.userAnalytics) {
       if (message.category) {
-        userAnalytics.featureClicks[message.category]++;
+        userAnalytics.featureClicks[message.category] = 
+          (userAnalytics.featureClicks[message.category] || 0) + 1;
       }
       
       if (message.solutionLinkClicked) {
@@ -741,11 +548,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     
     sendResponse({ success: true });
+    return true;
   }
   else if (message.action === "getAnalytics") {
     // Return analytics data
     sendResponse({ analytics: userAnalytics });
+    return true;
+  }
+  else if (message.action === "getSolutionsData") {
+    // Return solutions data
+    sendResponse({ solutionsData: solutionsDatabase });
+    return true;
   }
   
-  return true; // Keep message channel open for async responses
+  return false; // No async response needed
 });

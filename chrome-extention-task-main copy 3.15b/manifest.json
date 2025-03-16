@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "unless",
   "version": "1.0.1",
-  "description": "Multimodal accessibility analyzer for discovering tools on any webpage",
+  "description": "with no onboarding, just the app",
   "permissions": ["activeTab", "scripting", "storage", "tabs", "permissions"],
   "optional_host_permissions": ["*://*/*"],
   "action": {
@@ -30,8 +30,7 @@
         "images/*", 
         "solutions-data.json", 
         "overlay.html", 
-        "overlay.js",
-        "onboarding.html"
+        "overlay.js"
       ],
       "matches": ["<all_urls>"]
     }
